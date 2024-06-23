@@ -1,13 +1,13 @@
-# Sample Hardhat Project
+# Step 1
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+git clone https://github.com/jnoweb/Flash-Loan---PancakeSwap-V2-Triangular-Arbitrage.git
 
-Try running some of the following tasks:
+# Step 2
 
-```shell
-npx hardhat help
+Install packages as a clean install:
+
+npm ci
+
+# Step 3
+
 npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
