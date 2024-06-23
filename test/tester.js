@@ -8,7 +8,7 @@ describe('FlashSwap Contract', () => {
   let FLASHSWAP,
     BORROW_AMOUNT,
     FUND_AMOUNT,
-    initiateFundHuman,
+    initialFundingHuman,
     txArbitrage,
     gasUsedUSD;
 
@@ -49,7 +49,30 @@ describe('FlashSwap Contract', () => {
     // Ensure the whale has a balance
     const whale_balance = await tokenBase.balanceOf(BUSD_WHALE);
     expect(whale_balance).to.be.gt(0);
+
+    // Deploy smart contract
+    const FlashSwap = await equals.getContractFactory('PancakeFlashSwap');
+    FLASHSWAP = await FlashSwap.deploy();
+    await FLASHSWAP.deployed();
+
+    // Configure our borrowing
+    const borrowAmountHuman = '100';
+    BORROW_AMOUNT = ethers.utils.parseUnits(borrowAmountHuman, DECIMALS);
+
+    // Configure funding - FOR TESTING ONLY
+    initialFundingHuman = '100';
+    FUND_AMOUNT = ethers.utils.parseUnits(initialFundingHuman, DECIMALS);
+
+    // Fund our contract - FOR TESTING ONLY
+    await impersonateFundERC20(
+      tokenBase,
+      BUSD_WHALE,
+      FLASHSWAP.address,
+      initialFundingHuman
+    );
   });
+
+  describe('Abitrage Execution', () => {});
 
   it('general test', async () => {
     const whale_balance = await tokenBase.balanceOf(BUSD_WHALE);
