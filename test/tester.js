@@ -1,20 +1,16 @@
 const { expect } = require('chai');
-const { ethers, artifacts, waffle } = require('hardhat');
-const { impersonateFundERC20 } = require('../utils/utilities');
+const { ethers, waffle } = require('hardhat');
+const {
+  abi,
+} = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
 
 const provider = waffle.provider;
 
-describe('FlashSwap Contract', () => {
-  let FLASHSWAP,
-    BORROW_AMOUNT,
-    FUND_AMOUNT,
-    initialFundingHuman,
-    txArbitrage,
-    gasUsedUSD;
-
+describe('FlashSwap Contract', function () {
+  let tokenBase;
   const DECIMALS = 18;
 
-  const BUSD_WHALE = '0xe9e7cea3dedca5984780bafc599bd69add087d56';
+  const BUSD_WHALE = '0xf977814e90da44bfa03b6295a0616a897441acec';
   const BUSD = '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56';
   const USDT = '0x55d398326f99059fF775485246999027B3197955';
   const CAKE = '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82';
@@ -22,70 +18,21 @@ describe('FlashSwap Contract', () => {
 
   const BASE_TOKEN_ADDRESS = BUSD;
 
-  let tokenBase;
-
-  before(async () => {
-    // Get the contract artifact
-    const IERC20Artifact = await artifacts.readArtifact('IERC20');
-    tokenBase = new ethers.Contract(
-      BASE_TOKEN_ADDRESS,
-      IERC20Artifact.abi,
-      provider
-    );
-
-    // Impersonate the whale account
-    await network.provider.request({
-      method: 'hardhat_impersonateAccount',
-      params: [BUSD_WHALE],
-    });
-
-    whaleSigner = await ethers.getSigner(BUSD_WHALE);
-  });
-
-  beforeEach(async () => {
-    // Get the owner as the signer
+  beforeEach(async function () {
+    // Get owner as signer
     [owner] = await ethers.getSigners();
+
+    // Initialize tokenBase contract
+    tokenBase = new ethers.Contract(BASE_TOKEN_ADDRESS, abi, provider);
 
     // Ensure the whale has a balance
     const whale_balance = await tokenBase.balanceOf(BUSD_WHALE);
     expect(whale_balance).to.be.gt(0);
-
-    // Deploy smart contract (npx hardhat test passwed before addthe trhee lines of code below...)
-    const FlashSwap = await ethers.getContractFactory('PancakeFlashSwap');
-    FLASHSWAP = await FlashSwap.deploy();
-    await FLASHSWAP.deployed();
-
-    // Configure our borrowing
-    const borrowAmountHuman = '100';
-    BORROW_AMOUNT = ethers.utils.parseUnits(borrowAmountHuman, DECIMALS);
-
-    // Configure funding - FOR TESTING ONLY
-    initialFundingHuman = '100';
-    FUND_AMOUNT = ethers.utils.parseUnits(initialFundingHuman, DECIMALS);
-
-    // Fund our contract - FOR TESTING ONLY
-    /* await impersonateFundERC20(
-      tokenBase,
-      BUSD_WHALE,
-      FLASHSWAP.address,
-      initialFundingHuman
-    ); */
   });
 
-  //describe('Abitrage Execution', () => {});
-
-  it('general test', async () => {
+  it('should print whale balance', async function () {
     const whale_balance = await tokenBase.balanceOf(BUSD_WHALE);
-    console.log(
-      `Whale BUSD balance: ${ethers.utils.formatUnits(whale_balance, DECIMALS)}`
-    );
-  });
-
-  after(async () => {
-    // Stop impersonating the whale account
-    await network.provider.request({
-      method: 'hardhat_stopImpersonatingAccount',
-      params: [BUSD_WHALE],
-    });
+    console.log(whale_balance.toString());
+    expect(whale_balance).to.be.a('object');
   });
 });

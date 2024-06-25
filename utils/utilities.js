@@ -1,4 +1,4 @@
-const { network, ethers } = require("hardhat");
+const { network, ethers } = require('hardhat');
 
 const fundErc20 = async (contract, sender, recepient, amount) => {
   const FUND_AMOUNT = ethers.utils.parseUnits(amount, 18);
@@ -11,14 +11,14 @@ const fundErc20 = async (contract, sender, recepient, amount) => {
 
 const impersonateFundErc20 = async (contract, sender, recepient, amount) => {
   await network.provider.request({
-    method: "hardhat_impersonateAccount",
+    method: 'hardhat_impersonateAccount',
     params: [sender],
   });
 
   // fund baseToken to the contract
   await fundErc20(contract, sender, recepient, amount);
   await network.provider.request({
-    method: "hardhat_stopImpersonatingAccount",
+    method: 'hardhat_stopImpersonatingAccount',
     params: [sender],
   });
 };
