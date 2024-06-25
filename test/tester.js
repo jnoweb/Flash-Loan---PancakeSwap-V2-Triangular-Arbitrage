@@ -3,11 +3,18 @@ const { ethers, waffle } = require('hardhat');
 const {
   abi,
 } = require('../artifacts/contracts/interfaces/IERC20.sol/IERC20.json');
+const { impersonateFundErc20 } = require('../utils/utilities');
 
 const provider = waffle.provider;
 
 describe('FlashSwap Contract', function () {
-  let tokenBase;
+  let FLASHSWAP,
+    BORROW_AMOUNT,
+    FUND_AMOUNT,
+    initialFundingHuman,
+    txArbitrage,
+    gasUsedUSD;
+
   const DECIMALS = 18;
 
   const BUSD_WHALE = '0xf977814e90da44bfa03b6295a0616a897441acec';
@@ -28,11 +35,49 @@ describe('FlashSwap Contract', function () {
     // Ensure the whale has a balance
     const whale_balance = await tokenBase.balanceOf(BUSD_WHALE);
     expect(whale_balance).to.be.gt(0);
+
+    // Deploy smart contract
+    const FlashSwap = await ethers.getContractFactory('PancakeFlashSwap');
+    FLASHSWAP = await FlashSwap.deploy();
+    await FLASHSWAP.deployed();
+
+    // Configure our borrowing
+    const borrowAmountHuman = '1';
+    BORROW_AMOUNT = ethers.utils.parseUnits(borrowAmountHuman, DECIMALS);
+
+    // Configure funding - FOR TESTING ONLY
+    initialFundingHuman = '100';
+    FUND_AMOUNT = ethers.utils.parseUnits(initialFundingHuman, DECIMALS);
+
+    // Fund our contract - FOR TESTING ONLY
+    await impersonateFundErc20(
+      tokenBase,
+      BUSD_WHALE,
+      FLASHSWAP.address,
+      initialFundingHuman
+    );
   });
 
-  it('should print whale balance', async function () {
+  /* it('should print whale balance', async function () {
     const whale_balance = await tokenBase.balanceOf(BUSD_WHALE);
-    console.log(whale_balance.toString());
+    console.log(ethers.utils.formatUnits(whale_balance.toString(), DECIMALS));
     expect(whale_balance).to.be.a('object');
+  }); */
+
+  describe('Arbitrage Execution', () => {
+    it('ensure the contract is funded', async function () {
+      const flashSwapBalance = await FLASHSWAP.getBalanceOfToken(
+        BASE_TOKEN_ADDRESS
+      );
+
+      const flashSwapBalanceHuman = ethers.utils.formatUnits(
+        flashSwapBalance,
+        DECIMALS
+      );
+
+      console.log(flashSwapBalanceHuman);
+
+      expect(Number(flashSwapBalanceHuman)).equal(Number(initialFundingHuman));
+    });
   });
 });
