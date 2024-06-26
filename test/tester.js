@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const { expect, assert } = require('chai');
 const { ethers, waffle } = require('hardhat');
 const {
   abi,
@@ -75,9 +75,25 @@ describe('FlashSwap Contract', function () {
         DECIMALS
       );
 
-      console.log(flashSwapBalanceHuman);
+      // console.log(flashSwapBalanceHuman);
 
       expect(Number(flashSwapBalanceHuman)).equal(Number(initialFundingHuman));
+    });
+
+    it('executes the arbitrage', async () => {
+      txArbitrage = await FLASHSWAP.startArbitrage(
+        BASE_TOKEN_ADDRESS,
+        BORROW_AMOUNT
+      );
+
+      assert(txArbitrage);
+
+      // Print balances
+      const contractBalanceBUSD = await FLASHSWAP.getBalanceOfToken(BUSD);
+      const formattedBalBUSD = Number(
+        ethers.utils.formatUnits(contractBalanceBUSD, DECIMALS)
+      );
+      console.log('Balance of BUSD: ' + formattedBalBUSD);
     });
   });
 });
