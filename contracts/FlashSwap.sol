@@ -32,7 +32,7 @@ contract PancakeFlashSwap {
   uint256 private constant MAX_INT =
     115792089237316195423570985008687907853269984665640564039457584007913129639935;
 
-  // FUND SWAP CONTRACT
+  // FUND SMART CONTRACT
   // Provides a function to allow a contract to be funded
   function fundFlashSwapContract(
     address _owner,
@@ -71,7 +71,7 @@ contract PancakeFlashSwap {
       path
     )[1];
 
-    console.log('amountRequired', amountRequired);
+    // console.log('amountRequired', amountRequired);
 
     // Perform Arbitrage - Swap for another token
     uint256 amountReceived = IUniswapV2Router01(PANCAKE_ROUTER)
@@ -83,7 +83,7 @@ contract PancakeFlashSwap {
         deadline // deadline
       )[1];
 
-    console.log('amountReceived', amountReceived);
+    // console.log('amountReceived', amountReceived);
 
     require(amountReceived > 0, 'Aborted Tx: Trade returned zero');
 
@@ -122,7 +122,7 @@ contract PancakeFlashSwap {
     uint256 amount1Out = _tokenBorrow == token1 ? _amount : 0;
 
     // Passing data as bytes so that the 'swap' function knows that it is a flashloan
-    bytes memory data = abi.encode(_tokenBorrow, _amount);
+    bytes memory data = abi.encode(_tokenBorrow, _amount, msg.sender);
 
     // Execute the initial swap to get the loan
     IUniswapV2Pair(pair).swap(amount0Out, amount1Out, address(this), data);
@@ -142,9 +142,9 @@ contract PancakeFlashSwap {
     require(_sender == address(this), 'Sender should match this contract');
 
     // Decode data for calculating the repayment
-    (address tokenBorrow, uint256 amount) = abi.decode(
+    (address tokenBorrow, uint256 amount, address myAddress) = abi.decode(
       _data,
-      (address, uint256)
+      (address, uint256, address)
     );
 
     // Calculate the amount to repay at the end
@@ -168,9 +168,13 @@ contract PancakeFlashSwap {
     console.log('Trade 2 acquired coin: ', trade2AcquiredCoin);
     console.log('Trade 3 acquired coin: ', trade3AcquiredCoin);
 
-    /* // Check Profitability
+    // Check Profitability
     bool profCheck = checkProfitability(amountToRepay, trade3AcquiredCoin);
-    require(profCheck, 'Arbitrage not profitable'); */
+    require(profCheck, 'Arbitrage not profitable');
+
+    // Pay Myself
+    IERC20 otherToken = IERC20(BUSD);
+    otherToken.transfer(myAddress, trade3AcquiredCoin - amountToRepay);
 
     // Pay Loan Back
     IERC20(tokenBorrow).transfer(pair, amountToRepay);
