@@ -94,6 +94,12 @@ describe('FlashSwap Contract', function () {
         ethers.utils.formatUnits(contractBalanceBUSD, DECIMALS)
       );
       console.log('Balance of BUSD: ' + formattedBalBUSD);
+
+      const contractBalanceCROX = await FLASHSWAP.getBalanceOfToken(CROX);
+      const formattedBalCROX = Number(
+        ethers.utils.formatUnits(contractBalanceCROX, DECIMALS)
+      );
+      console.log('Balance of CROX: ' + formattedBalCROX);
     });
   });
 });

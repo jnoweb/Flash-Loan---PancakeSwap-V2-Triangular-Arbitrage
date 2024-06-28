@@ -25,7 +25,6 @@ contract PancakeFlashSwap {
   address private constant WBNB = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
   address private constant BUSD = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
   address private constant CAKE = 0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82;
-  address private constant USDT = 0x55d398326f99059fF775485246999027B3197955;
   address private constant CROX = 0x2c094F5A7D1146BB93850f629501eB749f6Ed491;
 
   // Trade Variables
@@ -49,11 +48,52 @@ contract PancakeFlashSwap {
     return IERC20(_address).balanceOf(address(this));
   }
 
+  // PLACE A TRADE
+  // Executed placing a trade
+  function placeTrade(
+    address _fromToken,
+    address _toToken,
+    uint256 _amountIn
+  ) private returns (uint256) {
+    address pair = IUniswapV2Factory(PANCAKE_FACTORY).getPair(
+      _fromToken,
+      _toToken
+    );
+    require(pair != address(0), 'Pool does not exist');
+
+    // Calculate amount out
+    address[] memory path = new address[](2);
+    path[0] = _fromToken;
+    path[1] = _toToken;
+
+    uint256 amountRequired = IUniswapV2Router01(PANCAKE_ROUTER).getAmountsOut(
+      _amountIn,
+      path
+    )[1];
+
+    console.log('amountRequired', amountRequired);
+
+    // Perform Arbitrage - Swap for another token
+    uint256 amountReceived = IUniswapV2Router01(PANCAKE_ROUTER)
+      .swapExactTokensForTokens(
+        _amountIn, // amountIn
+        amountRequired, // amountOutMin
+        path, // path
+        address(this), // address to
+        deadline // deadline
+      )[1];
+
+    console.log('amountReceived', amountReceived);
+
+    require(amountReceived > 0, 'Aborted Tx: Trade returned zero');
+
+    return amountReceived;
+  }
+
   // INITIATE ARBITRAGE
   // Begins receiving loan to engage performing arbitrage trades
   function startArbitrage(address _tokenBorrow, uint256 _amount) external {
     IERC20(BUSD).safeApprove(address(PANCAKE_ROUTER), MAX_INT);
-    IERC20(USDT).safeApprove(address(PANCAKE_ROUTER), MAX_INT);
     IERC20(CROX).safeApprove(address(PANCAKE_ROUTER), MAX_INT);
     IERC20(CAKE).safeApprove(address(PANCAKE_ROUTER), MAX_INT);
 
@@ -103,6 +143,12 @@ contract PancakeFlashSwap {
     uint256 amountToRepay = amount + fee;
 
     // DO ARBITRAGE
+
+    // Assign loan amount
+    uint256 loanAmount = _amount0 > 0 ? _amount0 : _amount1;
+
+    // Place trades
+    uint256 trade1AcquiredCoin = placeTrade(BUSD, CROX, loanAmount);
 
     // PAY YOURSELF
 
