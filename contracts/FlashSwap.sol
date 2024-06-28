@@ -90,6 +90,15 @@ contract PancakeFlashSwap {
     return amountReceived;
   }
 
+  // CHECK PROFITABILITY
+  // Checks whether > output > input
+  function checkProfitability(
+    uint256 _input,
+    uint256 _output
+  ) private returns (bool) {
+    return _output > _input;
+  }
+
   // INITIATE ARBITRAGE
   // Begins receiving loan to engage performing arbitrage trades
   function startArbitrage(address _tokenBorrow, uint256 _amount) external {
@@ -149,8 +158,19 @@ contract PancakeFlashSwap {
 
     // Place trades
     uint256 trade1AcquiredCoin = placeTrade(BUSD, CROX, loanAmount);
+    uint256 trade2AcquiredCoin = placeTrade(CROX, CAKE, trade1AcquiredCoin);
+    uint256 trade3AcquiredCoin = placeTrade(CAKE, BUSD, trade2AcquiredCoin);
 
-    // PAY YOURSELF
+    // Log for debugging
+    console.log('Loan amount: ', loanAmount);
+    console.log('Amount to repay: ', amountToRepay);
+    console.log('Trade 1 acquired coin: ', trade1AcquiredCoin);
+    console.log('Trade 2 acquired coin: ', trade2AcquiredCoin);
+    console.log('Trade 3 acquired coin: ', trade3AcquiredCoin);
+
+    /* // Check Profitability
+    bool profCheck = checkProfitability(amountToRepay, trade3AcquiredCoin);
+    require(profCheck, 'Arbitrage not profitable'); */
 
     // Pay Loan Back
     IERC20(tokenBorrow).transfer(pair, amountToRepay);

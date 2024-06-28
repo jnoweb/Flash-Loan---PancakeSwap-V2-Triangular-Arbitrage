@@ -100,6 +100,12 @@ describe('FlashSwap Contract', function () {
         ethers.utils.formatUnits(contractBalanceCROX, DECIMALS)
       );
       console.log('Balance of CROX: ' + formattedBalCROX);
+
+      const contractBalanceCAKE = await FLASHSWAP.getBalanceOfToken(CAKE);
+      const formattedBalCAKE = Number(
+        ethers.utils.formatUnits(contractBalanceCAKE, DECIMALS)
+      );
+      console.log('Balance of CAKE: ' + formattedBalCAKE);
     });
   });
 });
